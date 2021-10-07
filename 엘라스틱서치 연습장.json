@@ -1,0 +1,676 @@
+GET _search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+PUT index2/_doc/1
+{
+  "name": "mike",
+  "age": 25,
+  "gender": "male"
+}
+
+PUT index2/_doc/1
+{
+  "name": "park",
+  "age": 45,
+  "gender": "male"
+}
+
+PUT index2/_doc/2
+{
+  "name": "jane",
+  "country": "france"
+}
+
+PUT index2/_doc/3
+{
+  "name": "kim",
+  "age": "20",
+  "gender": "female"
+}
+
+GET index2
+GET index2/_doc/3
+GET index2/_search
+
+POST index2/_update/3
+{
+  "doc":
+  {"age": 20
+  }
+}
+
+POST _bulk
+{ "index": { "_index": "test", "_id": "1" } }
+{ "field1": "value1" }
+{ "create": { "_index": "test", "_id": "3" } }
+{ "field1": "value3" }
+{ "update": { "_id": "1", "_index": "test" } }
+{ "doc": { "field2": "value2" } }
+{ "delete": { "_index": "test", "_id": "2" } }
+
+POST _bulk
+{ "index": { "_index": "index2", "_id": "4" } }
+{ "name": "park", "age": 30, "gender": "female" }
+{ "index": { "_index": "index2", "_id": "5" } }
+{ "name": "jung", "age": 50, "gender": "male" }
+
+PUT index3
+{
+  "mappings": {
+    "properties": {
+      "age": {"type": "short"},
+      "name": {"type": "text"},
+      "gender": {"type": "keyword"}
+    }
+  }
+}
+
+GET index3/_mapping
+
+PUT text_index/_doc/1
+{
+  "contents": "beautiful day"
+}
+
+GET text_index/_search 
+{
+  "query": {
+    "match": {
+      "contents": "day"
+    }
+  }
+}
+
+#107pg
+PUT keyword_index
+{
+  "mappings": {
+    "properties": {
+      "contents": { "type": "keyword" }
+    }
+  }
+}
+
+PUT keyword_index/_doc/1
+{
+  "contents": "beautiful day"
+}
+
+GET keyword_index/_search 
+{
+  "query": {
+    "match": {
+      "contents": "beautiful"
+    }
+  }
+}
+
+GET keyword_index/_search 
+{
+  "query": {
+    "match": {
+      "contents": "beautiful day"
+    }
+  }
+}
+
+PUT multifield_index 
+{
+  "mappings": {
+    "properties": {
+      "message": { "type": "text" },
+      "contents": {
+        "type": "text", 
+        "fields": {
+          "keyword": { "type": "keyword" }
+        }
+      }
+    }
+  }
+}
+
+PUT multifield_index/_doc/1
+{
+  "message": "1 document",
+  "contents": "beautiful day"
+}
+
+PUT multifield_index/_doc/2 
+{
+  "message": "2 document", 
+  "contents": "beautiful day" 
+}
+
+PUT multifield_index/_doc/3 
+{
+  "message": "3 document", 
+  "contents": "wonderful day"
+}
+
+GET multifield_index/_doc/1
+GET multifield_index/_search 
+{
+  "query": { 
+    "match": {
+      "contents": "day"
+    }
+    }
+}
+
+GET multifield_index/_search 
+{
+  "query": { 
+    "match": {
+      "contents": "beautiful"
+    }
+    }
+}
+
+GET multifield_index/_search 
+{
+  "query": { 
+    "term": {
+      "contents.keyword": "day"
+    }
+  }
+}
+
+GET multifield_index/_search 
+{
+  "size": 0,
+  "aggs": {
+    "contents": {
+      "terms": {
+        "field": "contents.keyword"
+      }
+    }
+  }
+}
+
+GET _index_template 
+GET _index_template/ilm-history 
+GET _index_template/ilm* 
+
+#113pg
+PUT _index_template/test_template 
+{
+  "index_patterns": ["test_*"],
+  "priority": 1,
+  "template": {
+    "settings": { 
+      "number_of_shards": 3,
+      "number_of_replicas": 1
+  },
+  "mappings": { 
+    "properties": { 
+      "name": {"type": "text"},
+      "age": {"type": "short"}, 
+      "gender": {"type": "keyword"} 
+      }
+    }
+  }
+}
+
+PUT test_index1/_doc/1
+{
+  "name": "kim",
+  "age": 10,
+  "gender": "male"
+}
+
+GET test_index1/_mapping  
+
+PUT train_index1/_doc/1 
+{
+  "name": "kim",
+  "age": 10,
+  "gender": "male"
+}
+
+GET train_index1/_mapping 
+
+PUT test_index2/_doc/1 
+{
+  "name": "lee", 
+  "age": "19 years"
+}
+
+DELETE _index_template/test_template 
+
+PUT _index_template/multi_template1 
+{
+  "index_patterns": "multi_*",
+  "priority": 1,
+  "template": { 
+    "mappings": { 
+      "properties": { 
+        "age": {"type": "integer"}, 
+        "name": {"type": "text"}
+      }
+    }
+  }
+}
+
+PUT _index_template/multi_template2 
+{
+  "index_patterns": "multi_data_*", 
+  "priority": 2, 
+  "template": { 
+    "mappings": { 
+      "properties": { 
+        "name": {"type": "keyword"} 
+      }
+    }
+  }
+}
+
+PUT multi_data_index
+GET multi_data_index/_mapping 
+
+PUT dynamic_index1 
+{
+  "mappings": { 
+    "dynamic_templates": [
+      {
+        "my_string_fields": {
+          "match_mapping_type": "string", 
+          "mapping": {"type": "keyword"}
+        }
+      }
+    ]
+  }
+}
+
+PUT dynamic_index1/_doc/1 
+{
+  "name": "mr. kim",
+  "age": 40
+}
+
+GET dynamic_index1/_mapping 
+
+PUT dynamic_index2 
+{
+  "mappings": {
+    "dynamic_templates": [
+      {
+        "my_long_fields": {
+          "match": "long_*",
+          "unmatch": "*_text", 
+          "mapping": { "type": "long" }
+        }
+      }
+    ]
+  }
+}
+
+PUT dynamic_index2/_doc/1 
+{
+  "long_num": "5",
+  "long_text": "170"
+}
+
+#125pg
+POST _analyze 
+{
+  "analyzer": "stop",
+  "text": "The 10 most loving dog breeds."
+}
+
+POST _analyze 
+{
+  "tokenizer": "uax_url_email",
+  "text": "email: elastic@elk-company.com"
+}
+
+POST _analyze 
+{
+  "tokenizer": "standard",
+  "text": "email: elastic@elk-company.com"
+}
+
+POST _analyze 
+{
+  "tokenizer": "standard",
+  "filter": ["uppercase"],
+  "text": "The 10 most loving dog breeds."
+}
+
+PUT customer_analyzer 
+{
+  "settings": {
+    "analysis": {
+      "filter": {
+        "my_stopwords": {
+          "type": "stop", 
+          "stopwords": ["lions"]
+        }
+      },
+      "analyzer": {
+        "my_analyzer": {
+          "type": "custom",
+          "char_filter": [], 
+          "tokenizer": "standard",
+          "filter": ["lowercase", "my_stopwords"]
+        }
+      }
+    }
+  }
+}
+
+GET customer_analyzer/_analyze 
+{
+  "analyzer": "my_analyzer", 
+  "text": "Cats Lions Dogs"
+}
+
+GET customer_analyzer/_analyze 
+{
+  "tokenizer": "standard", 
+  "filter": ["lowercase", "my_stopwords" ], 
+  "text": "Cats Lions Dogs"
+}
+
+GET customer_analyzer/_analyze 
+{
+  "tokenizer": "standard", 
+  "filter": ["my_stopwords", "lowercase" ], 
+  "text": "Cats Lions Dogs"
+}
+
+#137pg chp4
+GET kibana_sample_data_ecommerce/_search 
+{
+  "query": {
+    "match": {
+      "category": "clothing"
+    }
+  }
+}
+
+# query string
+GET kibana_sample_data_ecommerce/_search?q=customer_full_name:Mary 
+
+# query DSL
+GET kibana_sample_data_ecommerce/_search 
+{
+  "query": {
+    "match": {
+      "customer_full_name": "Mary"
+    }
+  }
+}
+
+GET kibana_sample_data_ecommerce/_search 
+{
+  "query": {
+    "match": {
+      "products.product_name": "Pants"
+    }
+  },
+  "explain": true
+}
+
+GET kibana_sample_data_ecommerce/_search 
+{
+  "_source": ["customer_full_name"],
+  "query": {
+    "match": {
+      "customer_full_name": "mary bailey"
+    }
+  }
+}
+
+GET kibana_sample_data_ecommerce/_search 
+{
+  "_source": ["customer_full_name"],
+  "query": {
+    "match": {
+      "customer_full_name": {
+        "query": "mary bailey",
+        "operator": "and" 
+      }
+    }
+  }
+}
+
+GET kibana_sample_data_ecommerce/_search 
+{
+  "_source": ["customer_full_name"],
+  "query": {
+    "match": {
+      "customer_full_name": {
+        "query": "mary bailey",
+        "operator": "or" 
+      }
+    }
+  }
+}
+
+GET kibana_sample_data_ecommerce/_search 
+{
+  "_source": ["customer_full_name"],
+  "query": {
+    "match_phrase": {
+      "customer_full_name": "mary bailey"
+    }
+  }
+}
+
+GET kibana_sample_data_ecommerce/_search  
+{
+  "_source": ["customer_full_name"],
+  "query": {
+    "term": {
+      "customer_full_name" : "Mary Bailey"
+    }
+  }
+}
+
+GET kibana_sample_data_ecommerce/_search  
+{
+  "_source": ["customer_full_name"],
+  "query": {
+    "term": {
+      "customer_full_name.keyword" : "Mary Bailey"
+    }
+  }
+}
+
+GET kibana_sample_data_ecommerce/_search 
+{
+  "_source": ["day_of_week"],
+  "query": {
+    "terms": {
+      "day_of_week": ["Monday", "Sunday"]
+    }
+  }
+}
+
+GET kibana_sample_data_ecommerce/_search?explain=true
+{
+  "_source": ["customer_first_name", "customer_last_name", "customer_full_name"],
+  "query": {
+    "multi_match": {
+      "query": "mary",
+      "fields": [
+        "customer_full_name",
+        "customer_first_name",
+        "customer_last_name"
+        ]
+    }
+  }
+}
+
+GET kibana_sample_data_ecommerce/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "mary",
+      "fields": [
+        "customer_full_name^2",
+        "customer_first_name",
+        "customer_last_name"
+        ]
+    }
+  }
+}
+
+GET kibana_sample_data_flights/_search
+{
+  "query": {
+   "range": {
+     "timestamp": {
+       "gte": "2021-09-15",
+       "lt": "2021-10-16"
+     }
+   }
+  }
+}
+
+GET kibana_sample_data_flights/_search
+{
+  "query": {
+   "range": {
+     "timestamp": {
+       "gte": "now-1M"
+     }
+   }
+  }
+}
+
+PUT range_test_index 
+{
+  "mappings": { 
+    "properties": {
+      "test_date": {
+        "type": "date_range"
+      }
+    }
+  }
+}
+
+PUT range_test_index/_doc/1 
+{
+  "test_date": {
+    "gte": "2021-09-21",
+    "lt": "2021-10-05"
+  }
+}
+
+PUT range_test_index/_doc/2 
+{
+  "test_date": "2021-09-05"
+}
+
+#166pg
+GET range_test_index/_search 
+{
+  "query": {
+    "range": {
+      "test_date": {
+        "gte": "2021-01-11",
+        "lte": "2021-10-01",
+        "relation": "within"
+      }
+    }
+  }
+}
+
+GET kibana_sample_data_ecommerce/_search 
+{
+  "query": {
+    "bool": {
+      "must_not": {
+        "match": { "customer_full_name": "mary" }
+      }
+    }
+  }
+}
+
+GET kibana_sample_data_ecommerce/_search 
+{
+  "_source": ["customer_full_name"], 
+  "query": {
+    "bool": {
+      "must": {
+        "match": { "customer_first_name": "mary" } 
+      },
+      "must_not": {
+        "term": { "customer_last_name": "bailey" }
+      }
+    }
+  }
+}
+
+GET kibana_sample_data_ecommerce/_search 
+{
+  "query": {
+    "bool": {
+      "should": {
+        "match": { "customer_first_name": "mary" }
+      }
+    }
+  }
+}
+
+GET kibana_sample_data_ecommerce/_search 
+{
+  "_source": ["day_of_week", "customer_full_name"], 
+  "query": { 
+    "bool": {
+      "should": [
+        { "term": { "day_of_week": "Sunday" } }, 
+        { "match": { "customer_full_name": "mary" } }
+        ]
+    }
+  }
+}
+
+GET kibana_sample_data_ecommerce/_search 
+{
+  "_source": ["customer_full_name", "day_of_week"], 
+  "query": { 
+    "bool": {
+      "must": {
+        "match": { "customer_full_name": "mary" } 
+      },
+      "should": {
+        "term": { "day_of_week": "Monday" }
+      }
+    }
+  }
+}
+
+#178pg
+GET kibana_sample_data_ecommerce/_search 
+{
+  "_source": "customer_full_name",
+  "query": { 
+    "wildcard": {
+      "customer_full_name.keyword": "M?r*"
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
